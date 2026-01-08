@@ -23,7 +23,8 @@
     "symfony/property-access": "^7.0"
   },
   "require-dev": {
-    "symfony/http-client": "^7.4"
+    "symfony/http-client": "^7.4",
+    "symfony/var-dumper": "^7.4"
   },
   "autoload": {
     "psr-4": {

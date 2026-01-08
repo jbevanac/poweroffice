@@ -12,6 +12,8 @@ use Http\Discovery\Psr18ClientDiscovery;
 use Http\Message\Authentication\Bearer;
 use Poweroffice\Contracts\SDKInterface;
 use Poweroffice\Enum\Method;
+use Poweroffice\Resources\EmployeeResource;
+use Poweroffice\Serializer\PascalCaseToCamelCaseNameConverter;
 use Psr\Http\Client\ClientInterface;
 use Psr\SimpleCache\CacheInterface;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
@@ -24,41 +26,47 @@ use Symfony\Component\Serializer\Serializer;
 final class PowerofficeSDK implements SDKInterface
 {
     private const string AUTH_ROUTE = '/OAuth/Token';
-    private ?string $access_token;
+    private const string VERSION = 'v2';
+    private ?string $accessToken = null;
+    private ?int $accessTokenExpiresAt = null;
+    private ?ClientInterface $client = null;
 
     public function __construct(
         private readonly string $baseUrl,
         private readonly string $applicationKey,
         private readonly string $clientKey,
         private readonly string $subscriptionKey,
-        private ?ClientInterface $client = null,
+        private readonly ?ClientInterface $customClient = null,
         private readonly ?CacheInterface $cache = null,
         private readonly string $cacheKey = 'poweroffice_access_token',
         private array $plugins = [],
     ) {
-        $this->loadOrCreateSessionToken();
     }
 
-    private function loadOrCreateSessionToken(): void
+    private function loadOrCreateAccessToken(): void
     {
+        if ($this->accessToken && $this->accessTokenExpiresAt && $this->accessTokenExpiresAt > time()) {
+            return;
+        }
+
         if ($this->cache) {
             $tokenData = $this->cache->get($this->cacheKey);
-            if ($tokenData) {
-                $this->access_token = $tokenData['token'];
+            if ($tokenData && $tokenData['expires_at'] > time()) {
+                $this->accessToken = $tokenData['token'];
+                $this->accessTokenExpiresAt = $tokenData['expires_at'];
                 return;
             }
         }
 
         $tokenData = $this->authenticate();
+        $this->accessToken = $tokenData['token'];
+        $this->accessTokenExpiresAt = $tokenData['expires_at'];
 
-        var_dump($tokenData);
         $this->cache?->set(
             key: $this->cacheKey,
             value: $tokenData,
-            ttl: 1100
+            ttl: $tokenData['expires_at'] - time()
         );
-
-        $this->access_token = $tokenData['token'];
     }
 
     private function authenticate(): array
@@ -102,9 +110,16 @@ final class PowerofficeSDK implements SDKInterface
         ];
     }
 
-    public function getToken(): string
+    public function getAccessToken(): string
     {
-        return base64_encode("0:$this->access_token");
+        $this->loadOrCreateAccessToken();
+
+        return $this->accessToken;
+    }
+
+    public function getSubscriptionKey(): string
+    {
+        return $this->subscriptionKey;
     }
 
     /**
@@ -128,7 +143,7 @@ final class PowerofficeSDK implements SDKInterface
             new ErrorPlugin(),
             new AuthenticationPlugin(
                 new Bearer(
-                    token: $this->access_token,
+                    token: $this->accessToken,
                 )
             )
         ];
@@ -136,40 +151,41 @@ final class PowerofficeSDK implements SDKInterface
 
     public function client(): ClientInterface
     {
-        if ($this->client !== null) {
+        if (null !== $this->client) {
             return $this->client;
         }
 
         $this->client = new PluginClient(
-            client: Psr18ClientDiscovery::find(),
+            client: $this->customClient ?? Psr18ClientDiscovery::find(),
             plugins: $this->plugins,
         );
 
         return $this->client;
     }
 
-    public function setClient(ClientInterface $client): PowerofficeSDK
-    {
-        $this->client = $client;
-
-        return $this;
-    }
-
     public function getUrl(): string
     {
-        return $this->baseUrl;
+        return $this->baseUrl . '/' . self::VERSION;
     }
 
     public static function getSerializer(): Serializer
     {
         return new Serializer(
-            [new BackedEnumNormalizer(), new ObjectNormalizer(null, null, null, new ReflectionExtractor())],
-            [new JsonEncoder()]
+            normalizers: [
+                new BackedEnumNormalizer(),
+                new ObjectNormalizer(null, new PascalCaseToCamelCaseNameConverter(), null, new ReflectionExtractor()),
+            ],
+            encoders: [
+                new JsonEncoder(),
+            ],
         );
-
     }
 
-
     /* RESOURCES */
-
+    public function employees(): EmployeeResource
+    {
+        return new EmployeeResource(
+            sdk: $this,
+        );
+    }
 }
