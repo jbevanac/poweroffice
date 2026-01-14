@@ -5,7 +5,6 @@ namespace Poweroffice\Contracts;
 use Poweroffice\PowerofficeSDK;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Ramsey\Collection\Collection;
 use Poweroffice\Enum\Method;
 
 interface ResourceInterface
@@ -15,8 +14,6 @@ interface ResourceInterface
     public function getSdk(): PowerofficeSDK;
 
     public function attachPayLoad(RequestInterface $request, string $payload): RequestInterface;
-
-    public function createCollection(string $modelClass, array $data): Collection;
 
     public function sendRequest(RequestInterface $request): ResponseInterface;
 }

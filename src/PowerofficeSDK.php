@@ -12,6 +12,7 @@ use Http\Discovery\Psr18ClientDiscovery;
 use Http\Message\Authentication\Bearer;
 use Poweroffice\Contracts\SDKInterface;
 use Poweroffice\Enum\Method;
+use Poweroffice\Resources\ClientIntegrationInformationResource;
 use Poweroffice\Resources\EmployeeResource;
 use Poweroffice\Serializer\PascalCaseToCamelCaseNameConverter;
 use Psr\Http\Client\ClientInterface;
@@ -185,6 +186,13 @@ final class PowerofficeSDK implements SDKInterface
     public function employees(): EmployeeResource
     {
         return new EmployeeResource(
+            sdk: $this,
+        );
+    }
+
+    public function clientIntegrationInformation(): ClientIntegrationInformationResource
+    {
+        return new ClientIntegrationInformationResource(
             sdk: $this,
         );
     }

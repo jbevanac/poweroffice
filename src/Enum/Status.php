@@ -6,6 +6,7 @@ enum Status: int
 {
     case OK = 200;
     case RESOURCE_CREATED = 201;
+    case NO_CONTENT = 204;
 
     case INVALID_REQUEST = 400;
     case UNAUTHORIZED = 401;
