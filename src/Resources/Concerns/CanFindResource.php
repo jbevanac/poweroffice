@@ -5,6 +5,7 @@ namespace Poweroffice\Resources\Concerns;
 use Poweroffice\Contracts\ModelInterface;
 use Poweroffice\Contracts\ResourceInterface;
 use Poweroffice\Enum\Method;
+use Poweroffice\Enum\Status;
 use Poweroffice\Exceptions\ApiException;
 use Poweroffice\Model\ProblemDetail;
 
@@ -29,14 +30,13 @@ trait CanFindResource
         );
 
         $response = $this->sendRequest($request);
-        $responseData = $this->decodeJsonResponse($response);
+        $data = $this->decodeJsonResponse($response);
 
         if ($raw) {
-            return $responseData;
+            return $data;
         }
 
-        $data = $responseData['data'] ?? $responseData;
-        if (200 == $response->getStatusCode()) {
+        if (Status::OK->value === $response->getStatusCode()) {
             return $modelClass::make(data: $data);
         }
 

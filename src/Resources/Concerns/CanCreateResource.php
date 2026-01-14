@@ -17,7 +17,7 @@ trait CanCreateResource
     /**
      * @throws ApiException
      */
-    public function createResource(ModelInterface $model, string $path): ModelInterface|ProblemDetail|null
+    public function createResource(ModelInterface $model, string $path): ModelInterface|ProblemDetail
     {
         $request = $this->request(
             method: Method::POST,
@@ -30,13 +30,13 @@ trait CanCreateResource
         );
 
         $response = $this->sendRequest($request);
-        $responseData = $this->decodeJsonResponse($response);
+        $data = $this->decodeJsonResponse($response);
 
-        if (Status::RESOURCE_CREATED == $response->getStatusCode()) {
-            return $model::make(data: $responseData);
+        if (Status::RESOURCE_CREATED->value === $response->getStatusCode()) {
+            return $model::make(data: $data);
         }
 
         // Need to handle 400, 401, 404, 403, and 429
-        return ProblemDetail::make(data: $responseData);
+        return ProblemDetail::make(data: $data);
     }
 }

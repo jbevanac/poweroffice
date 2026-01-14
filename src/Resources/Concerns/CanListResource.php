@@ -5,6 +5,7 @@ namespace Poweroffice\Resources\Concerns;
 use Poweroffice\Contracts\ModelInterface;
 use Poweroffice\Contracts\ResourceInterface;
 use Poweroffice\Enum\Method;
+use Poweroffice\Enum\Status;
 use Poweroffice\Exceptions\ApiException;
 use Poweroffice\Exceptions\FailedToSendRequestException;
 use Poweroffice\Model\ProblemDetail;
@@ -36,9 +37,14 @@ trait CanListResource
         );
 
         $response = $this->sendRequest($request);
+
+        if (Status::NO_CONTENT->value === $response->getStatusCode()) {
+            return $this->createCollection($modelClass, []);
+        }
+
         $data = $this->decodeJsonResponse($response);
 
-        if (200 !== $response->getStatusCode()) {
+        if (Status::OK->value !== $response->getStatusCode()) {
             return ProblemDetail::make(data: $data);
         }
 
