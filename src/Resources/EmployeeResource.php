@@ -3,13 +3,16 @@
 namespace Poweroffice\Resources;
 
 use Poweroffice\Model\Employee;
+use Poweroffice\Model\MailAddress;
 use Poweroffice\Model\ProblemDetail;
 use Poweroffice\Query\Options\QueryOptions;
+use Poweroffice\Query\Patch\PatchBuilder;
 use Poweroffice\Resources\Concerns\CanCreateCollection;
 use Poweroffice\Resources\Concerns\CanCreateRequest;
 use Poweroffice\Resources\Concerns\CanCreateResource;
 use Poweroffice\Resources\Concerns\CanFindResource;
 use Poweroffice\Resources\Concerns\CanListResource;
+use Poweroffice\Resources\Concerns\CanPatchResource;
 use Ramsey\Collection\Collection;
 use Poweroffice\Contracts\ResourceInterface;
 use Poweroffice\Exceptions\ApiException;
@@ -21,7 +24,7 @@ final class EmployeeResource implements ResourceInterface
     use CanCreateRequest;
     use CanCreateCollection;
     use CanCreateResource;
-    // use CanUpdateResource;
+    use CanPatchResource;
     use CanFindResource;
     use CanListResource;
 
@@ -30,7 +33,33 @@ final class EmployeeResource implements ResourceInterface
      *     firstName: string,
      *     lastName: string,
      *     emailAddress?: string,
+     *     dateOfBirth?: string,
+     *     departmentCode?: string,
+     *     departmentId?: int,
+     *     endDate?: string,
+     *     externalImportReference?: string,
+     *     externalNumber?: int,
+     *     gender?: string,
+     *     hiredDate?: string,
+     *     internationalIdCountryCode?: string,
+     *     internationalIdNumber?: string,
+     *     internationalIdReportToAltinn?: bool,
+     *     internationalIdType?: string,
+     *     isArchived?: bool,
+     *     jobTitle?: string,
+     *     locationCode?: string,
+     *     locationId?: int,
+     *     mailAddress?: MailAddress,
+     *     managerEmployeeNo?: int,
+     *     nationalIdNumber?: string,
+     *     number?: int,
+     *     phoneNumber?: string,
+     *     salaryBankAccountId?: int,
+     *     startDate?: string,
+     *     subledgerAccountId?: int,
+     *     travelExpenseBankAccountId?: int,
      * } $data
+     *
      * @throws ApiException
      */
     public function create(array $data): Employee|ProblemDetail
@@ -46,16 +75,14 @@ final class EmployeeResource implements ResourceInterface
     /**
      * @throws ApiException
      */
-    // public function update(array $data): Employee|ProblemDetail
-    // {
-    //     /** @var Employee $customer */
-    //     $employee = Employee::make($data);
-    //
-    //     return $this->updateResource(
-    //         model: $employee,
-    //         path: 'customer/' . $customer->id,
-    //     );
-    // }
+    public function patch(PatchBuilder $patchBuilder, string|int $id): Employee|ProblemDetail
+    {
+        return $this->patchResource(
+            modelClass: Employee::class,
+            patchBuilder: $patchBuilder,
+            path: 'employees/' . $id,
+        );
+    }
 
     /**
      * @throws ApiException
@@ -83,7 +110,7 @@ final class EmployeeResource implements ResourceInterface
     /**
      * @throws ApiException
      */
-    public function list(array $filters = [], ?QueryOptions $queryOptions = null): Collection
+    public function list(array $filters = [], ?QueryOptions $queryOptions = null): Collection|ProblemDetail
     {
         return $this->listResource(
             modelClass: Employee::class,
