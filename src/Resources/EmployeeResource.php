@@ -83,7 +83,7 @@ final class EmployeeResource implements ResourceInterface
         return $this->patchResource(
             modelClass: Employee::class,
             patchBuilder: $patchBuilder,
-            path: self::PATH.'/'.$id,
+            path: [self::PATH, $id],
         );
     }
 
@@ -95,7 +95,7 @@ final class EmployeeResource implements ResourceInterface
         return $this->patchResource(
             modelClass: EmployeeBankAccounts::class,
             patchBuilder: $patchBuilder,
-            path: self::PATH.'/'.$id.'/BankAccounts',
+            path: [self::PATH, $id, 'BankAccounts'],
         );
     }
 
@@ -106,7 +106,7 @@ final class EmployeeResource implements ResourceInterface
     {
         return $this->findResource(
             modelClass: Employee::class,
-            path: self::PATH.'/' . $id,
+            path: [self::PATH, $id],
         );
     }
 

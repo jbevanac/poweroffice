@@ -50,7 +50,7 @@ final class ContactBankAccountsResource implements ResourceInterface
 
         return $this->createResource(
             model: $contactBankAccount,
-            path: self::PATH.'/'.$contactId,
+            path: [self::PATH, $contactId],
         );
     }
 
@@ -62,7 +62,7 @@ final class ContactBankAccountsResource implements ResourceInterface
         return $this->patchResource(
             modelClass: ContactBankAccount::class,
             patchBuilder: $patchBuilder,
-            path: self::PATH.'/'.$contactId.'/'.$contactBankAccountId,
+            path: [self::PATH, $contactId, $contactBankAccountId],
         );
 
     }
@@ -74,7 +74,7 @@ final class ContactBankAccountsResource implements ResourceInterface
     {
         return $this->findResource(
             modelClass: ContactBankAccount::class,
-            path: self::PATH.'/'.$contactId.'/'.$contactBankAccountId,
+            path: [self::PATH, $contactId, $contactBankAccountId],
         );
     }
 
