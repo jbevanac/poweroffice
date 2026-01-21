@@ -44,7 +44,7 @@ final class ContactBankAccountsResource implements ResourceInterface
      *
      * @throws ApiException
      */
-    public function create(array $data, int $contactId): ContactBankAccount|ProblemDetail
+    public function create(array $data, string|int $contactId): ContactBankAccount|ProblemDetail
     {
         $contactBankAccount = ContactBankAccount::make($data);
 
