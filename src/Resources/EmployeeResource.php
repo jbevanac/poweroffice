@@ -90,7 +90,7 @@ final class EmployeeResource implements ResourceInterface
     /**
      * @throws ApiException
      */
-    public function patchBankAccounts(PatchBuilder $patchBuilder, string|int $id): ProblemDetail
+    public function patchBankAccounts(PatchBuilder $patchBuilder, string|int $id): EmployeeBankAccounts|ProblemDetail
     {
         return $this->patchResource(
             modelClass: EmployeeBankAccounts::class,
