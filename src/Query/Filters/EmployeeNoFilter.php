@@ -2,7 +2,7 @@
 
 namespace Poweroffice\Query\Filters;
 
-abstract class EmployeeNoFilter extends AbstractStringAbleFilter
+final class EmployeeNoFilter extends AbstractStringAbleFilter
 {
     public function name(): string
     {
