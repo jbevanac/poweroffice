@@ -13,6 +13,7 @@ use Http\Message\Authentication\Bearer;
 use Poweroffice\Contracts\SDKInterface;
 use Poweroffice\Enum\Method;
 use Poweroffice\Resources\ClientIntegrationInformationResource;
+use Poweroffice\Resources\ContactBankAccountsResource;
 use Poweroffice\Resources\EmployeeResource;
 use Poweroffice\Serializer\PascalCaseToCamelCaseNameConverter;
 use Psr\Http\Client\ClientInterface;
@@ -193,6 +194,13 @@ final class PowerofficeSDK implements SDKInterface
     public function clientIntegrationInformation(): ClientIntegrationInformationResource
     {
         return new ClientIntegrationInformationResource(
+            sdk: $this,
+        );
+    }
+
+    public function contactBankAccounts(): ContactBankAccountsResource
+    {
+        return new ContactBankAccountsResource(
             sdk: $this,
         );
     }

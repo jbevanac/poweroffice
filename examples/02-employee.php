@@ -13,7 +13,8 @@ $sdk = new PowerofficeSDK(
     clientKey: CLIENT_KEY,
     subscriptionKey: SUBSCRIPTION_KEY
 );
-
+listBankAccounts($sdk);
+// listEmployees($sdk);
 /**
  * CREATE EMPLOYEE
  */
@@ -24,7 +25,7 @@ function createEmployee(PowerofficeSDK $sdk)
         'lastName' => 'Nordmann',
         'emailAddress' => null
     ]);
-    dd($employee);
+    dump($employee);
 }
 
 function listEmployees(PowerofficeSDK $sdk)
@@ -40,4 +41,10 @@ function listEmployees(PowerofficeSDK $sdk)
 
     $employees = $sdk->employees()->list($filters, $queryOptions);
     dump($employees);
+}
+
+function listBankAccounts(PowerOfficeSDK $sdk)
+{
+    $bankAccounts = $sdk->contactBankAccounts()->list();
+    dump($bankAccounts);
 }
