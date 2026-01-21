@@ -17,7 +17,7 @@ trait CanCreateResource
     /**
      * @throws ApiException
      */
-    public function createResource(ModelInterface $model, string $path): ModelInterface|ProblemDetail
+    public function createResource(ModelInterface $model, array|string $path): ModelInterface|ProblemDetail
     {
         $request = $this->request(
             method: Method::POST,

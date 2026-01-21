@@ -9,7 +9,7 @@ use Poweroffice\Enum\Method;
 
 interface ResourceInterface
 {
-    public function request(Method $method, string $url, array $query = [], ?string $body = null, array $headers = []): RequestInterface;
+    public function request(Method $method, array|string $url, array $query = [], ?string $body = null, array $headers = []): RequestInterface;
 
     public function getSdk(): PowerofficeSDK;
 

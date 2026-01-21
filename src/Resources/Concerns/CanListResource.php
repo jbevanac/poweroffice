@@ -21,7 +21,7 @@ trait CanListResource
      * @throws FailedToSendRequestException
      * @throws ApiException
      */
-    public function listResource(string $modelClass, string $path, array $filters = [], ?QueryOptions $queryOptions = null): ModelInterface|Collection
+    public function listResource(string $modelClass, array|string $path, array $filters = [], ?QueryOptions $queryOptions = null): ModelInterface|Collection
     {
         if (!is_subclass_of($modelClass, ModelInterface::class)) {
             throw new \InvalidArgumentException("$modelClass must implement ModelInterface");

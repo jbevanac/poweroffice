@@ -30,8 +30,12 @@ trait CanCreateRequest
         return 'https://' . $baseUrl . '/' . $url;
     }
 
-    public function request(Method $method, string $url, array $query = [], ?string $body = null, array $headers = []): RequestInterface
+    public function request(Method $method, array|string $url, array $query = [], ?string $body = null, array $headers = []): RequestInterface
     {
+        if (is_array($url)) {
+            $url = implode('/', array_map(fn($s) => trim((string)$s, '/'), $url));
+        }
+
         $uri = $this->prepareUrl($url);
 
         if (!empty($query)) {

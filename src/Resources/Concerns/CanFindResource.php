@@ -18,7 +18,7 @@ trait CanFindResource
      *
      * @throws ApiException
      */
-    public function findResource(string $modelClass, string $path, bool $raw = false): ModelInterface|ProblemDetail|array
+    public function findResource(string $modelClass, array|string $path, bool $raw = false): ModelInterface|ProblemDetail|array
     {
         if (!is_subclass_of($modelClass, ModelInterface::class)) {
             throw new \InvalidArgumentException("$modelClass must implement ModelInterface");

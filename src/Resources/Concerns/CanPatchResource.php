@@ -18,7 +18,7 @@ trait CanPatchResource
     /**
      * @throws ApiException
      */
-    public function patchResource(string $modelClass, PatchBuilder $patchBuilder, string $path): ProblemDetail|ModelInterface
+    public function patchResource(string $modelClass, PatchBuilder $patchBuilder, array|string $path): ProblemDetail|ModelInterface
     {
         if (!is_subclass_of($modelClass, ModelInterface::class)) {
             throw new \InvalidArgumentException("$modelClass must implement ModelInterface");
