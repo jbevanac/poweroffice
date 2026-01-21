@@ -1,9 +1,14 @@
 <?php
 
+use Poweroffice\Model\Employee;
+use Poweroffice\Model\ProblemDetail;
 use Poweroffice\PowerofficeSDK;
+use Poweroffice\Query\Filters\ContactIdsFilter;
 use Poweroffice\Query\Filters\EmployeeEmailsFilter;
 use Poweroffice\Query\Filters\EmployeeNoFilter;
+use Poweroffice\Query\Options\OrderBy;
 use Poweroffice\Query\Options\QueryOptions;
+use Ramsey\Collection\Collection;
 
 require '00-setup.php';
 
@@ -13,22 +18,37 @@ $sdk = new PowerofficeSDK(
     clientKey: CLIENT_KEY,
     subscriptionKey: SUBSCRIPTION_KEY
 );
-listBankAccounts($sdk);
-// listEmployees($sdk);
+
+
+$employees = listEmployees($sdk);
+
+$contactIds = [];
+foreach ($employees as $employee){
+    $contactIds[] = $employee->id;
+}
+$bankAccounts = $sdk->contactBankAccounts()->list(
+    filters: [new ContactIdsFilter($contactIds)],
+    queryOptions: new QueryOptions(
+        fields: ['id'],
+        orderBy: [new OrderBy('contactId')],
+    ),
+);
+
+dd($bankAccounts);
+
 /**
  * CREATE EMPLOYEE
  */
-function createEmployee(PowerofficeSDK $sdk)
+function createEmployee(PowerofficeSDK $sdk): ProblemDetail|Employee
 {
-    $employee = $sdk->employees()->create([
+    return $sdk->employees()->create([
         'firstName' => 'Ola',
         'lastName' => 'Nordmann',
         'emailAddress' => null
     ]);
-    dump($employee);
 }
 
-function listEmployees(PowerofficeSDK $sdk)
+function listEmployees(PowerofficeSDK $sdk): ProblemDetail|Collection
 {
     $filters = [
         new EmployeeNoFilter([5,6]),
@@ -39,12 +59,10 @@ function listEmployees(PowerofficeSDK $sdk)
     $filters = [];
     $queryOptions = null;
 
-    $employees = $sdk->employees()->list($filters, $queryOptions);
-    dump($employees);
+    return $sdk->employees()->list($filters, $queryOptions);
 }
 
-function listBankAccounts(PowerOfficeSDK $sdk)
+function listBankAccounts(PowerOfficeSDK $sdk): ProblemDetail|Collection
 {
-    $bankAccounts = $sdk->contactBankAccounts()->list();
-    dump($bankAccounts);
+    return $sdk->contactBankAccounts()->list();
 }

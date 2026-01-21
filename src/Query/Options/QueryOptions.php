@@ -6,11 +6,13 @@ final class QueryOptions
 {
     public function __construct(
         public ?array $fields = null,
-        public ?string $orderBy = null,
+        /** @var OrderBy[] $orderBy */
+        public ?array $orderBy = null,
         public ?int $pageNumber = null,
         public ?int $pageSize = null,
         public ?bool $useDatabaseValidation = null,
-    ) {}
+    ) {
+    }
 
     public function toQuery(): array
     {
@@ -21,7 +23,13 @@ final class QueryOptions
         }
 
         if ($this->orderBy) {
-            $query['OrderBy'] = $this->orderBy;
+            $query['OrderBy'] = implode(
+                ', ',
+                array_map(
+                    static fn (OrderBy $orderBy) => $orderBy->toQuery(),
+                    $this->orderBy
+                )
+            );
         }
 
         if ($this->pageNumber !== null) {
