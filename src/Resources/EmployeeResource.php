@@ -3,6 +3,7 @@
 namespace Poweroffice\Resources;
 
 use Poweroffice\Model\Employee;
+use Poweroffice\Model\EmployeeBankAccounts;
 use Poweroffice\Model\MailAddress;
 use Poweroffice\Model\ProblemDetail;
 use Poweroffice\Query\Options\QueryOptions;
@@ -20,6 +21,8 @@ use Poweroffice\Resources\Concerns\CanAccessSDK;
 
 final class EmployeeResource implements ResourceInterface
 {
+    private const string PATH = 'Employees';
+
     use CanAccessSDK;
     use CanCreateRequest;
     use CanCreateCollection;
@@ -68,7 +71,7 @@ final class EmployeeResource implements ResourceInterface
 
         return $this->createResource(
             model: $employee,
-            path: 'employees',
+            path: self::PATH,
         );
     }
 
@@ -80,7 +83,19 @@ final class EmployeeResource implements ResourceInterface
         return $this->patchResource(
             modelClass: Employee::class,
             patchBuilder: $patchBuilder,
-            path: 'employees/' . $id,
+            path: self::PATH.'/'.$id,
+        );
+    }
+
+    /**
+     * @throws ApiException
+     */
+    public function patchBankAccounts(PatchBuilder $patchBuilder, string|int $id): ProblemDetail
+    {
+        return $this->patchResource(
+            modelClass: EmployeeBankAccounts::class,
+            patchBuilder: $patchBuilder,
+            path: self::PATH.'/'.$id.'/BankAccounts',
         );
     }
 
@@ -91,19 +106,7 @@ final class EmployeeResource implements ResourceInterface
     {
         return $this->findResource(
             modelClass: Employee::class,
-            path: 'employees/' . $id,
-        );
-    }
-
-    /**
-     * @throws ApiException
-     */
-    public function findRaw(int $id): array
-    {
-        return $this->findResource(
-            modelClass: Employee::class,
-            path: 'employees/' . $id,
-            raw: true,
+            path: self::PATH.'/' . $id,
         );
     }
 
@@ -114,7 +117,7 @@ final class EmployeeResource implements ResourceInterface
     {
         return $this->listResource(
             modelClass: Employee::class,
-            path: 'employees',
+            path: self::PATH,
             filters: $filters,
             queryOptions: $queryOptions,
         );
