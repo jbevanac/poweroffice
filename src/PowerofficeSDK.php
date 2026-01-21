@@ -4,6 +4,7 @@ namespace Poweroffice;
 
 use Http\Client\Common\Plugin\AuthenticationPlugin;
 use Http\Client\Common\Plugin\ErrorPlugin;
+use Http\Client\Common\Plugin\HeaderAppendPlugin;
 use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Discovery\Composer\Plugin;
@@ -12,6 +13,7 @@ use Http\Discovery\Psr18ClientDiscovery;
 use Http\Message\Authentication\Bearer;
 use Poweroffice\Contracts\SDKInterface;
 use Poweroffice\Enum\Method;
+use Poweroffice\Plugins\UserAgentPlugin;
 use Poweroffice\Resources\ClientIntegrationInformationResource;
 use Poweroffice\Resources\ContactBankAccountsResource;
 use Poweroffice\Resources\EmployeeResource;
@@ -43,6 +45,7 @@ final class PowerofficeSDK implements SDKInterface
         private readonly string $cacheKey = 'poweroffice_access_token',
         private array $plugins = [],
     ) {
+        $this->withPlugins($this->plugins);
     }
 
     private function loadOrCreateAccessToken(): void
@@ -95,7 +98,11 @@ final class PowerofficeSDK implements SDKInterface
             ->withHeader('Accept', 'application/json')
             ->withBody($streamFactory->createStream($body));
 
-        $response = $this->client()->sendRequest($request);
+        // Wrap with PluginClient only for safe plugins
+        $plugins = array_filter($this->plugins, fn($p) => $p instanceof UserAgentPlugin);
+        $client = new PluginClient($this->client(), $plugins);
+
+        $response = $client->sendRequest($request);
 
         $body = (string) $response->getBody();
         $data = json_decode($body, true);
@@ -135,6 +142,8 @@ final class PowerofficeSDK implements SDKInterface
             $plugins,
         );
 
+        $this->client = null;
+
         return $this;
     }
 
@@ -145,9 +154,14 @@ final class PowerofficeSDK implements SDKInterface
             new ErrorPlugin(),
             new AuthenticationPlugin(
                 new Bearer(
-                    token: $this->accessToken,
+                    token: $this->getAccessToken(),
                 )
-            )
+            ),
+            new HeaderAppendPlugin([
+                'Ocp-Apim-Subscription-Key' => $this->subscriptionKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ]),
         ];
     }
 
@@ -157,8 +171,9 @@ final class PowerofficeSDK implements SDKInterface
             return $this->client;
         }
 
+        $httpClient = $this->customClient ?? Psr18ClientDiscovery::find();
         $this->client = new PluginClient(
-            client: $this->customClient ?? Psr18ClientDiscovery::find(),
+            client: $httpClient,
             plugins: $this->plugins,
         );
 

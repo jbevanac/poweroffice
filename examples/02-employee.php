@@ -2,6 +2,7 @@
 
 use Poweroffice\Model\Employee;
 use Poweroffice\Model\ProblemDetail;
+use Poweroffice\Plugins\UserAgentPlugin;
 use Poweroffice\PowerofficeSDK;
 use Poweroffice\Query\Filters\ContactIdsFilter;
 use Poweroffice\Query\Filters\EmployeeEmailsFilter;
@@ -16,9 +17,9 @@ $sdk = new PowerofficeSDK(
     baseUrl: URL,
     applicationKey: APPLICATION_KEY,
     clientKey: CLIENT_KEY,
-    subscriptionKey: SUBSCRIPTION_KEY
+    subscriptionKey: SUBSCRIPTION_KEY,
+    plugins: [new UserAgentPlugin('jbevanac/poweroffice '.VERSION)],
 );
-
 
 $employees = listEmployees($sdk);
 

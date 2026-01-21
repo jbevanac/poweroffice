@@ -53,24 +53,6 @@ trait CanCreateRequest
             );
         }
 
-        if (!isset($headers['Authorization'])) {
-            $headers['Authorization'] =
-                'Bearer ' . $this->getSdk()->getAccessToken();
-        }
-
-        if (!isset($headers['Ocp-Apim-Subscription-Key'])) {
-            $headers['Ocp-Apim-Subscription-Key'] =
-                $this->getSdk()->getSubscriptionKey();
-        }
-
-        if (!isset($headers['Content-Type'])) {
-            $headers['Content-Type'] = 'application/json';
-        }
-
-        if (!isset($headers['Accept'])) {
-            $headers['Accept'] = 'application/json';
-        }
-
         foreach ($headers as $name => $value) {
             $request = $request->withHeader($name, $value);
         }
