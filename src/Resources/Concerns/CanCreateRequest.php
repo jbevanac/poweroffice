@@ -81,6 +81,7 @@ trait CanCreateRequest
     /**
      * @param RequestInterface $request
      * @param array<int,FilterInterface|scalar|array> $filters
+     * @param QueryOptions|null $queryOptions
      * @return RequestInterface
      */
     public function applyFilters(RequestInterface $request, array $filters, ?QueryOptions $queryOptions = null): RequestInterface
