@@ -2,10 +2,10 @@
 
 namespace Poweroffice\Query\Filters;
 
-abstract class EmployeeNoFilter extends AbstractStringAbleFilter
+class ContactIdsFilter extends AbstractStringAbleFilter
 {
     public function name(): string
     {
-        return 'employeeNos';
+        return 'contactIds';
     }
 }
