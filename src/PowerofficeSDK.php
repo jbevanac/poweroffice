@@ -13,6 +13,7 @@ use Http\Discovery\Psr18ClientDiscovery;
 use Http\Message\Authentication\Bearer;
 use Poweroffice\Contracts\SDKInterface;
 use Poweroffice\Enum\Method;
+use Poweroffice\Plugins\LazyAuthenticationPlugin;
 use Poweroffice\Plugins\UserAgentPlugin;
 use Poweroffice\Resources\ClientIntegrationInformationResource;
 use Poweroffice\Resources\ContactBankAccountsResource;
@@ -38,8 +39,8 @@ final class PowerofficeSDK implements SDKInterface
     public function __construct(
         private readonly string $baseUrl,
         private readonly string $applicationKey,
-        private readonly string $clientKey,
         private readonly string $subscriptionKey,
+        private readonly string $clientKey,
         private readonly ?ClientInterface $customClient = null,
         private readonly ?CacheInterface $cache = null,
         private readonly string $cacheKey = 'poweroffice_access_token',
@@ -48,10 +49,10 @@ final class PowerofficeSDK implements SDKInterface
         $this->withPlugins($this->plugins);
     }
 
-    private function loadOrCreateAccessToken(): void
+    public function loadOrCreateAccessToken(): string
     {
         if ($this->accessToken && $this->accessTokenExpiresAt && $this->accessTokenExpiresAt > time()) {
-            return;
+            return $this->accessToken;
         }
 
         if ($this->cache) {
@@ -59,7 +60,7 @@ final class PowerofficeSDK implements SDKInterface
             if ($tokenData && $tokenData['expires_at'] > time()) {
                 $this->accessToken = $tokenData['token'];
                 $this->accessTokenExpiresAt = $tokenData['expires_at'];
-                return;
+                return $this->accessToken;
             }
         }
 
@@ -72,6 +73,8 @@ final class PowerofficeSDK implements SDKInterface
             value: $tokenData,
             ttl: $tokenData['expires_at'] - time()
         );
+
+        return $this->accessToken;
     }
 
     private function authenticate(): array
@@ -99,10 +102,8 @@ final class PowerofficeSDK implements SDKInterface
             ->withBody($streamFactory->createStream($body));
 
         // Wrap with PluginClient only for safe plugins
-        $plugins = array_filter($this->plugins, fn($p) => $p instanceof UserAgentPlugin);
-        $client = new PluginClient($this->client(), $plugins);
-
-        $response = $client->sendRequest($request);
+        $safeClient = $this->customClient ?? Psr18ClientDiscovery::find();
+        $response = $safeClient->sendRequest($request);
 
         $body = (string) $response->getBody();
         $data = json_decode($body, true);
@@ -117,18 +118,6 @@ final class PowerofficeSDK implements SDKInterface
             'token'      => $data['access_token'],
             'expires_at' => time() + $data['expires_in'],
         ];
-    }
-
-    public function getAccessToken(): string
-    {
-        $this->loadOrCreateAccessToken();
-
-        return $this->accessToken;
-    }
-
-    public function getSubscriptionKey(): string
-    {
-        return $this->subscriptionKey;
     }
 
     /**
@@ -152,11 +141,7 @@ final class PowerofficeSDK implements SDKInterface
         return [
             new RetryPlugin(),
             new ErrorPlugin(),
-            new AuthenticationPlugin(
-                new Bearer(
-                    token: $this->getAccessToken(),
-                )
-            ),
+            new LazyAuthenticationPlugin($this),
             new HeaderAppendPlugin([
                 'Ocp-Apim-Subscription-Key' => $this->subscriptionKey,
                 'Content-Type' => 'application/json',
