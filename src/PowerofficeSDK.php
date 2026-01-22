@@ -13,11 +13,14 @@ use Http\Discovery\Psr18ClientDiscovery;
 use Http\Message\Authentication\Bearer;
 use Poweroffice\Contracts\SDKInterface;
 use Poweroffice\Enum\Method;
+use Poweroffice\Enum\Status;
+use Poweroffice\Model\TokenResponse;
 use Poweroffice\Plugins\LazyAuthenticationPlugin;
 use Poweroffice\Plugins\UserAgentPlugin;
 use Poweroffice\Resources\ClientIntegrationInformationResource;
 use Poweroffice\Resources\ContactBankAccountsResource;
 use Poweroffice\Resources\EmployeeResource;
+use Poweroffice\Resources\OnboardingResource;
 use Poweroffice\Serializer\PascalCaseToCamelCaseNameConverter;
 use Psr\Http\Client\ClientInterface;
 use Psr\SimpleCache\CacheInterface;
@@ -51,33 +54,37 @@ final class PowerofficeSDK implements SDKInterface
 
     public function loadOrCreateAccessToken(): string
     {
+        // Check in-memory token first
         if ($this->accessToken && $this->accessTokenExpiresAt && $this->accessTokenExpiresAt > time()) {
             return $this->accessToken;
         }
 
+        // Check cache
         if ($this->cache) {
             $tokenData = $this->cache->get($this->cacheKey);
-            if ($tokenData && $tokenData['expires_at'] > time()) {
-                $this->accessToken = $tokenData['token'];
-                $this->accessTokenExpiresAt = $tokenData['expires_at'];
+            if ($tokenData instanceof TokenResponse && $tokenData->expiresAt > time()) {
+                $this->accessToken = $tokenData->accessToken;
+                $this->accessTokenExpiresAt = $tokenData->expiresAt;
                 return $this->accessToken;
             }
         }
 
-        $tokenData = $this->authenticate();
-        $this->accessToken = $tokenData['token'];
-        $this->accessTokenExpiresAt = $tokenData['expires_at'];
+        // Authenticate
+        $tokenResponse = $this->authenticate();
+        $this->accessToken = $tokenResponse->accessToken;
+        $this->accessTokenExpiresAt = $tokenResponse->expiresAt;
 
+        // Cache it
         $this->cache?->set(
             key: $this->cacheKey,
-            value: $tokenData,
-            ttl: $tokenData['expires_at'] - time()
+            value: $tokenResponse,
+            ttl: $tokenResponse->expiresAt - time(),
         );
 
         return $this->accessToken;
     }
 
-    private function authenticate(): array
+    private function authenticate(): TokenResponse
     {
         $uri = rtrim($this->baseUrl, '/').self::AUTH_ROUTE;
 
@@ -106,16 +113,13 @@ final class PowerofficeSDK implements SDKInterface
         $body = (string) $response->getBody();
         $data = json_decode($body, true);
 
-        if (!isset($data['access_token'])) {
-            throw new \RuntimeException(
-                'Unable to authenticate with PowerOffice API: ' . json_encode($data)
-            );
+        if (Status::OK->value === $response->getStatusCode()) {
+            return TokenResponse::make($data);
         }
 
-        return [
-            'token'      => $data['access_token'],
-            'expires_at' => time() + $data['expires_in'],
-        ];
+        throw new \RuntimeException(
+            'Unable to authenticate with PowerOffice API: ' . json_encode($data)
+        );
     }
 
     /**
@@ -194,6 +198,12 @@ final class PowerofficeSDK implements SDKInterface
     }
 
     /* RESOURCES */
+    public function onboarding(): OnboardingResource
+    {
+        return new OnboardingResource(
+            sdk: $this,
+        );
+    }
     public function employees(): EmployeeResource
     {
         return new EmployeeResource(
