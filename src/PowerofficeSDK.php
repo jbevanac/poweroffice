@@ -101,9 +101,7 @@ final class PowerofficeSDK implements SDKInterface
             ->withHeader('Accept', 'application/json')
             ->withBody($streamFactory->createStream($body));
 
-        // Wrap with PluginClient only for safe plugins
-        $safeClient = $this->customClient ?? Psr18ClientDiscovery::find();
-        $response = $safeClient->sendRequest($request);
+        $response = $this->safeClient()->sendRequest($request);
 
         $body = (string) $response->getBody();
         $data = json_decode($body, true);
@@ -163,6 +161,18 @@ final class PowerofficeSDK implements SDKInterface
         );
 
         return $this->client;
+    }
+
+    public function safeClient(): ClientInterface
+    {
+        $httpClient = $this->customClient ?? Psr18ClientDiscovery::find();
+
+        $safePlugins = array_filter(
+            $this->plugins,
+            fn($plugin) => $plugin instanceof UserAgentPlugin
+        );
+
+        return new PluginClient($httpClient, $safePlugins);
     }
 
     public function getUrl(): string

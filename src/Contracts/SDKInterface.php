@@ -13,5 +13,7 @@ interface SDKInterface
 
     public function client(): ClientInterface;
 
+    public function safeClient(): ClientInterface;
+
     public function getUrl(): string;
 }
