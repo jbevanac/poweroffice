@@ -10,14 +10,27 @@ use Poweroffice\Query\Filters\EmployeeNoFilter;
 use Poweroffice\Query\Options\OrderBy;
 use Poweroffice\Query\Options\QueryOptions;
 use Ramsey\Collection\Collection;
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\Cache\Psr16Cache;
 
 require '00-setup.php';
+
+// PSR-6 cache (FilesystemAdapter)
+$psr6Cache = new FilesystemAdapter(
+    namespace: 'poweroffice',
+    defaultLifetime: 3600,
+    directory: CACHE_DIR
+);
+
+// PSR-16 wrapper
+$cache = new Psr16Cache($psr6Cache);
 
 $sdk = new PowerofficeSDK(
     baseUrl: URL,
     applicationKey: APPLICATION_KEY,
-    clientKey: CLIENT_KEY,
     subscriptionKey: SUBSCRIPTION_KEY,
+    clientKey: CLIENT_KEY,
+    cache: $cache,
     plugins: [new UserAgentPlugin('jbevanac/poweroffice '.VERSION)],
 );
 
