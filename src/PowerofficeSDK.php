@@ -222,12 +222,13 @@ final class PowerofficeSDK implements SDKInterface
     }
 
     /* RESOURCES */
-    public function onboarding(): OnboardingResource
-    {
-        return new OnboardingResource(
-            sdk: $this,
-        );
-    }
+    // public function onboarding(): OnboardingResource
+    // {
+    //     return new OnboardingResource(
+    //         sdk: $this,
+    //     );
+    // }
+
     public function employees(): EmployeeResource
     {
         return new EmployeeResource(
