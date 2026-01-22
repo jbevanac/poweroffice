@@ -2,18 +2,23 @@
 
 namespace Poweroffice;
 
-use Http\Client\Common\Plugin\AuthenticationPlugin;
+use Http\Client\Common\Plugin;
 use Http\Client\Common\Plugin\ErrorPlugin;
 use Http\Client\Common\Plugin\HeaderAppendPlugin;
 use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
-use Http\Discovery\Composer\Plugin;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
-use Http\Message\Authentication\Bearer;
 use Poweroffice\Contracts\SDKInterface;
 use Poweroffice\Enum\Method;
 use Poweroffice\Enum\Status;
+use Poweroffice\Exceptions\InvalidClientException;
+use Poweroffice\Exceptions\InvalidGrantException;
+use Poweroffice\Exceptions\InvalidRequestException;
+use Poweroffice\Exceptions\PowerofficeException;
+use Poweroffice\Exceptions\RateLimitException;
+use Poweroffice\Exceptions\UnauthorizedClientException;
+use Poweroffice\Exceptions\UnsupportedGrantTypeException;
 use Poweroffice\Model\TokenResponse;
 use Poweroffice\Plugins\LazyAuthenticationPlugin;
 use Poweroffice\Plugins\UserAgentPlugin;
@@ -60,7 +65,7 @@ final class PowerofficeSDK implements SDKInterface
         }
 
         // Check cache
-        if ($this->cache) {
+        if ($this->cache && $this->cacheKey) {
             $tokenData = $this->cache->get($this->cacheKey);
             if ($tokenData instanceof TokenResponse && $tokenData->expiresAt > time()) {
                 $this->accessToken = $tokenData->accessToken;
@@ -112,12 +117,31 @@ final class PowerofficeSDK implements SDKInterface
 
         $body = (string) $response->getBody();
         $data = json_decode($body, true);
+        $status = $response->getStatusCode();
 
-        if (Status::OK->value === $response->getStatusCode()) {
+        if (Status::OK->value === $status) {
             return TokenResponse::make($data);
         }
 
-        throw new \RuntimeException(
+        if (Status::TO_MANY_REQUESTS->value === $status) {
+            $retryAfter = 0;
+            if (isset($data['message']) && preg_match('/(\d+) seconds?/', $data['message'], $matches)) {
+                $retryAfter = (int)$matches[1];
+            }
+            throw new RateLimitException($data['message'] ?? 'Rate limit exceeded', $retryAfter);
+        }
+
+        if (Status::INVALID_REQUEST->value === 400 && isset($data['error'])) {
+            throw match ($data['error']) {
+                'invalid_request' => new InvalidRequestException($data['error_description'] ?? 'Invalid request'),
+                'invalid_client' => new InvalidClientException($data['error_description'] ?? 'Invalid client credentials'),
+                'invalid_grant' => new InvalidGrantException($data['error_description'] ?? 'Invalid grant'),
+                'unauthorized_client' => new UnauthorizedClientException($data['error_description'] ?? 'Unauthorized client'),
+                'unsupported_grant_type' => new UnsupportedGrantTypeException($data['error_description'] ?? 'Unsupported grant type'),
+                default => new PowerofficeException($data['error_description'] ?? 'Unknown error'),
+            };
+        }
+        throw new PowerofficeException(
             'Unable to authenticate with PowerOffice API: ' . json_encode($data)
         );
     }
