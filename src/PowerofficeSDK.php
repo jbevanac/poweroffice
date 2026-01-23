@@ -3,12 +3,12 @@
 namespace Poweroffice;
 
 use Http\Client\Common\Plugin;
-use Http\Client\Common\Plugin\ErrorPlugin;
 use Http\Client\Common\Plugin\HeaderAppendPlugin;
 use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
+use Poweroffice\Contracts\Resources;
 use Poweroffice\Contracts\SDKInterface;
 use Poweroffice\Enum\Method;
 use Poweroffice\Enum\Status;
@@ -22,7 +22,6 @@ use Poweroffice\Exceptions\RateLimitException;
 use Poweroffice\Exceptions\UnauthorizedClientException;
 use Poweroffice\Exceptions\UnsupportedGrantTypeException;
 use Poweroffice\Model\TokenResponse;
-use Poweroffice\Plugins\LazyAuthenticationPlugin;
 use Poweroffice\Plugins\UserAgentPlugin;
 use Poweroffice\Resources\ClientIntegrationInformationResource;
 use Poweroffice\Resources\ContactBankAccountsResource;
@@ -40,7 +39,7 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
 
-final class PowerofficeSDK implements SDKInterface
+final class PowerofficeSDK implements SDKInterface, Resources
 {
     private const string AUTH_ROUTE = '/OAuth/Token';
     private const string VERSION = 'v2';
@@ -52,7 +51,7 @@ final class PowerofficeSDK implements SDKInterface
         private readonly string $baseUrl,
         private readonly string $applicationKey,
         private readonly string $subscriptionKey,
-        private readonly string $clientKey,
+        private readonly ?string $clientKey,
         private readonly ?ClientInterface $customClient = null,
         private readonly ?CacheInterface $cache = null,
         private readonly string $cacheKey = 'poweroffice_access_token',
@@ -176,11 +175,9 @@ final class PowerofficeSDK implements SDKInterface
     public function withPlugins(array $plugins): PowerofficeSDK
     {
         $this->plugins = array_merge(
-            $this->defaultPlugins(),
             $plugins,
+            $this->defaultPlugins(),
         );
-
-        $this->client = null;
 
         return $this;
     }
@@ -189,8 +186,6 @@ final class PowerofficeSDK implements SDKInterface
     {
         return [
             new RetryPlugin(),
-            new ErrorPlugin(),
-            new LazyAuthenticationPlugin($this),
             new HeaderAppendPlugin([
                 'Ocp-Apim-Subscription-Key' => $this->subscriptionKey,
                 'Content-Type' => 'application/json',
@@ -231,6 +226,11 @@ final class PowerofficeSDK implements SDKInterface
         return $this->baseUrl . '/' . self::VERSION;
     }
 
+    public function getApplicationKey(): string
+    {
+        return $this->applicationKey;
+    }
+
     public static function getSerializer(): Serializer
     {
         return new Serializer(
@@ -245,20 +245,6 @@ final class PowerofficeSDK implements SDKInterface
     }
 
     /* RESOURCES */
-    // public function onboarding(): OnboardingResource
-    // {
-    //     return new OnboardingResource(
-    //         sdk: $this,
-    //     );
-    // }
-
-    public function employees(): EmployeeResource
-    {
-        return new EmployeeResource(
-            sdk: $this,
-        );
-    }
-
     public function clientIntegrationInformation(): ClientIntegrationInformationResource
     {
         return new ClientIntegrationInformationResource(
@@ -269,6 +255,20 @@ final class PowerofficeSDK implements SDKInterface
     public function contactBankAccounts(): ContactBankAccountsResource
     {
         return new ContactBankAccountsResource(
+            sdk: $this,
+        );
+    }
+
+    public function employees(): EmployeeResource
+    {
+        return new EmployeeResource(
+            sdk: $this,
+        );
+    }
+
+    public function onboarding(): OnboardingResource
+    {
+        return new OnboardingResource(
             sdk: $this,
         );
     }

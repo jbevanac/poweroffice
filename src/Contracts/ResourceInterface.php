@@ -16,4 +16,5 @@ interface ResourceInterface
     public function attachPayLoad(RequestInterface $request, string $payload): RequestInterface;
 
     public function sendRequest(RequestInterface $request): ResponseInterface;
+
 }

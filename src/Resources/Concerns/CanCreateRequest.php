@@ -7,7 +7,9 @@ use Poweroffice\Contracts\FilterInterface;
 use Poweroffice\Exceptions\FailedToDecodeJsonResponseException;
 use Poweroffice\Exceptions\FailedToSendRequestException;
 use Poweroffice\Exceptions\UriTooLongException;
+use Poweroffice\Plugins\LazyAuthenticationPlugin;
 use Poweroffice\Query\Options\QueryOptions;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Poweroffice\Contracts\ResourceInterface;
@@ -121,18 +123,84 @@ trait CanCreateRequest
     /**
      * @throws FailedToSendRequestException
      */
-    public function sendRequest(RequestInterface $request): ResponseInterface
+    public function sendRequest(RequestInterface $request, bool $authenticate = true): ResponseInterface
     {
+        $plugins = $authenticate ? [new LazyAuthenticationPlugin($this->getSdk())] : [];
+        $sdk = $this->getSdk()->withPlugins($plugins);
+
         try {
-            return $this->getSdk()->client()->sendRequest(
+            $response = $sdk->client()->sendRequest(
                 request: $request,
             );
-        } catch (\Throwable $e) {
+        } catch (ClientExceptionInterface $e) {
             throw new FailedToSendRequestException(
                 message: 'Failed to send request.',
                 previous: $e,
             );
         }
+
+        $this->handleCommonErrors($response);
+
+        return $response;
+    }
+
+    private function handleCommonErrors(ResponseInterface $response): void
+    {
+        $status = $response->getStatusCode();
+
+        // Early exit for OK
+        if ($status >= 200 && $status < 300) {
+            return;
+        }
+
+        // // Attempt to decode the response JSON (catch invalid JSON too)
+        // $data = [];
+        // try {
+        //     $data = json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        // } catch (\JsonException) {
+        //     // fallback for non-JSON error responses
+        // }
+        //
+        // // 400-level validation errors
+        // if ($status === 400) {
+        //     if (!empty($data)) {
+        //         /** @var ProblemDetail $problem */
+        //         $problem = ProblemDetail::make($data);
+        //         throw new ApiValidationException($problem);
+        //     }
+        //
+        //     throw new ApiValidationException(
+        //         ProblemDetail::make([
+        //             'title' => 'Bad Request',
+        //             'status' => 400,
+        //         ])
+        //     );
+        // }
+        //
+        // // 401 Unauthorized
+        // if ($status === 401) {
+        //     throw new UnauthorizedException('Unauthorized. Check API keys and authentication.');
+        // }
+        //
+        // // 403 Forbidden
+        // if ($status === 403) {
+        //     throw new ForbiddenException('Forbidden. You do not have access to this resource.');
+        // }
+        //
+        // // 429 Too Many Requests
+        // if ($status === 429) {
+        //     throw new RateLimitExceededException('Rate limit exceeded. Try again later.');
+        // }
+        //
+        // // 500+ server errors
+        // if ($status >= 500) {
+        //     throw new ServerErrorException('Server error. Try again later.');
+        // }
+        //
+        // // fallback for any other unexpected status
+        // throw new FailedToSendRequestException(
+        //     message: 'Unexpected HTTP status: ' . $status,
+        // );
     }
 
     /**
