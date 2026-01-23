@@ -55,8 +55,10 @@ $sdk = new PowerofficeSDK(
 // Step 1: Initiate onboarding
 $onboardingResponse = $sdk->onboarding()->initiate(YOUR_CLIENT_ORG_NR, YOUR_WHITELISTED_REDIRECT_URL);
 
+// Step 2: Redirect to
+$onboardingResponse->temporaryUrl;
 
-// Step 2: User is redirected to your whitelisted URL with a token
+// Step 3: User is redirected to your whitelisted URL with a token
 $token = $_GET['onboarding_token']; 
 $finalizeOnboardingResponse = $sdk->onboarding()->finalize($token);
 
