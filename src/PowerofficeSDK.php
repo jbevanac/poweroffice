@@ -132,8 +132,16 @@ final class PowerofficeSDK implements SDKInterface, Resources
             ->withHeader('Accept', 'application/json')
             ->withBody($streamFactory->createStream($body));
 
+        $client = new PluginClient(
+            client: $this->customClient ?? Psr18ClientDiscovery::find(),
+            plugins: array_filter(
+                $this->plugins,
+                fn($plugin) => $plugin instanceof UserAgentPlugin
+            ),
+        );
+
         try {
-            $response = $this->safeClient()->sendRequest($request);
+            $response = $client->sendRequest($request);
         } catch (ClientExceptionInterface $e) {
             throw new FailedToSendRequestException('Failed to authenticate with PowerOffice API', $e);
         }
@@ -208,18 +216,6 @@ final class PowerofficeSDK implements SDKInterface, Resources
         );
 
         return $this->client;
-    }
-
-    public function safeClient(): ClientInterface
-    {
-        $httpClient = $this->customClient ?? Psr18ClientDiscovery::find();
-
-        $safePlugins = array_filter(
-            $this->plugins,
-            fn($plugin) => $plugin instanceof UserAgentPlugin
-        );
-
-        return new PluginClient($httpClient, $safePlugins);
     }
 
     public function getUrl(): string
