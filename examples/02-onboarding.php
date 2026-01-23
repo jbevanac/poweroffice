@@ -9,7 +9,7 @@ $sdk = new PowerofficeSDK(
     baseUrl: URL,
     applicationKey: APPLICATION_KEY,
     subscriptionKey: SUBSCRIPTION_KEY,
-    clientKey: CLIENT_KEY,
+    clientKey: null,
     plugins: [new UserAgentPlugin('jbevanac/poweroffice '.VERSION)],
 );
 
