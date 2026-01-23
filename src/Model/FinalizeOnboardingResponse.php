@@ -9,7 +9,8 @@ final class FinalizeOnboardingResponse implements ModelInterface
     use ModelTrait;
 
     public function __construct(
-        public ?array $onboardedClientsInformation = null,
+        /** @var OnboardedClientInformation[] */
+        public array $onboardedClientsInformation = [],
         public ?string $userEmail = null,
     ) {
     }

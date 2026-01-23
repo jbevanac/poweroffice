@@ -35,6 +35,7 @@ use Psr\SimpleCache\CacheInterface;
 use Psr\SimpleCache\InvalidArgumentException;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
 use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -233,6 +234,7 @@ final class PowerofficeSDK implements SDKInterface, Resources
         return new Serializer(
             normalizers: [
                 new BackedEnumNormalizer(),
+                new ArrayDenormalizer(),
                 new ObjectNormalizer(null, new PascalCaseToCamelCaseNameConverter(), null, new ReflectionExtractor()),
             ],
             encoders: [
