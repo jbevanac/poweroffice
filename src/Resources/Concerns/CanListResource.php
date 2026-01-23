@@ -50,5 +50,4 @@ trait CanListResource
 
         return $this->createCollection($modelClass, $data);
     }
-
 }

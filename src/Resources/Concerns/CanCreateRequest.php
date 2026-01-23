@@ -6,6 +6,7 @@ use Http\Discovery\Psr17FactoryDiscovery;
 use Poweroffice\Contracts\FilterInterface;
 use Poweroffice\Exceptions\FailedToDecodeJsonResponseException;
 use Poweroffice\Exceptions\FailedToSendRequestException;
+use Poweroffice\Exceptions\UriTooLongException;
 use Poweroffice\Query\Options\QueryOptions;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -17,6 +18,12 @@ use Poweroffice\Enum\Method;
  */
 trait CanCreateRequest
 {
+    /**
+     * PowerOffice API rejects URLs longer than ~2000 characters
+     * and returns a misleading 404.
+     */
+    private const int MAX_URI_LENGTH = 2000;
+
     public function prepareUrl(string $url): string
     {
         $baseUrl = str_replace('https://', '', rtrim($this->getSdk()->getUrl(), '/'));
@@ -40,6 +47,11 @@ trait CanCreateRequest
 
         if (!empty($query)) {
             $uri .= '?' . http_build_query($query);
+        }
+
+        $length = strlen($uri);
+        if ($length > self::MAX_URI_LENGTH) {
+            throw new UriTooLongException($length, self::MAX_URI_LENGTH);
         }
 
         $requestFactory = Psr17FactoryDiscovery::findRequestFactory();
