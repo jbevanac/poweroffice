@@ -26,6 +26,7 @@ use Poweroffice\Plugins\UserAgentPlugin;
 use Poweroffice\Resources\ClientIntegrationInformationResource;
 use Poweroffice\Resources\ContactBankAccountsResource;
 use Poweroffice\Resources\EmployeeResource;
+use Poweroffice\Resources\OffboardingResource;
 use Poweroffice\Resources\OnboardingResource;
 use Poweroffice\Serializer\PascalCaseToCamelCaseNameConverter;
 use Psr\Http\Client\ClientExceptionInterface;
@@ -262,6 +263,13 @@ final class PowerofficeSDK implements SDKInterface, Resources
     public function employees(): EmployeeResource
     {
         return new EmployeeResource(
+            sdk: $this,
+        );
+    }
+
+    public function offboarding(): OffboardingResource
+    {
+        return new OffboardingResource(
             sdk: $this,
         );
     }

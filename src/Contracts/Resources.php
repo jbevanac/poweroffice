@@ -6,6 +6,7 @@ use Poweroffice\PowerofficeSDK;
 use Poweroffice\Resources\ClientIntegrationInformationResource;
 use Poweroffice\Resources\ContactBankAccountsResource;
 use Poweroffice\Resources\EmployeeResource;
+use Poweroffice\Resources\OffboardingResource;
 use Poweroffice\Resources\OnboardingResource;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -17,7 +18,9 @@ interface Resources
 
     public function contactBankAccounts(): ContactBankAccountsResource;
 
-    public function onboarding(): OnboardingResource;
-
     public function employees(): EmployeeResource;
+
+    public function offboarding(): OffboardingResource;
+
+    public function onboarding(): OnboardingResource;
 }
