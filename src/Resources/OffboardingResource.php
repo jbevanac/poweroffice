@@ -34,7 +34,7 @@ final class OffboardingResource implements ResourceInterface
             url: [self::PATH, 'RemoveIntegration'],
         );
 
-        $response = $this->sendRequest($request, false);
+        $response = $this->sendRequest($request);
         $data = $this->decodeJsonResponse($response);
 
         if (Status::OK->value === $response->getStatusCode()) {

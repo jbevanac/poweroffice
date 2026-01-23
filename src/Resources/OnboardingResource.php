@@ -22,7 +22,6 @@ final class OnboardingResource implements ResourceInterface
     use CanAccessSDK;
     use CanCreateRequest;
 
-
     /**
      * @throws FailedToDecodeJsonResponseException
      * @throws FailedToSendRequestException
