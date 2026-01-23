@@ -6,7 +6,10 @@ use Poweroffice\Contracts\ModelInterface;
 use Poweroffice\Contracts\ResourceInterface;
 use Poweroffice\Enum\Method;
 use Poweroffice\Enum\Status;
-use Poweroffice\Exceptions\ApiException;
+use Poweroffice\Exceptions\FailedToDecodeJsonResponseException;
+use Poweroffice\Exceptions\FailedToSendRequestException;
+use Poweroffice\Exceptions\PowerofficeException;
+use Poweroffice\Exceptions\UriTooLongException;
 use Poweroffice\Model\ProblemDetail;
 use Poweroffice\Query\Patch\PatchBuilder;
 
@@ -16,7 +19,10 @@ use Poweroffice\Query\Patch\PatchBuilder;
 trait CanPatchResource
 {
     /**
-     * @throws ApiException
+     * @throws FailedToDecodeJsonResponseException
+     * @throws UriTooLongException
+     * @throws PowerofficeException
+     * @throws FailedToSendRequestException
      */
     public function patchResource(string $modelClass, PatchBuilder $patchBuilder, array|string $path): ProblemDetail|ModelInterface
     {

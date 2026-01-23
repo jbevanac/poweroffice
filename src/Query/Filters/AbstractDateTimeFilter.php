@@ -5,12 +5,16 @@ namespace Poweroffice\Query\Filters;
 use DateTimeInterface;
 use DateTimeImmutable;
 use Poweroffice\Contracts\FilterInterface;
+use Poweroffice\Exceptions\InvalidFilterValueException;
 
 abstract class AbstractDateTimeFilter implements FilterInterface
 {
     /** @var DateTimeInterface[] */
     protected array $dateTimes;
 
+    /**
+     * @throws InvalidFilterValueException
+     */
     public function __construct(DateTimeInterface|string|array $values)
     {
         $values = is_array($values) ? $values : [$values];
@@ -33,13 +37,27 @@ abstract class AbstractDateTimeFilter implements FilterInterface
         ];
     }
 
+    /**
+     * @throws InvalidFilterValueException
+     */
     protected function normalize(DateTimeInterface|string $value): DateTimeInterface
     {
         if ($value instanceof DateTimeInterface) {
             return $value;
         }
 
-        return new DateTimeImmutable($value);
+
+        try {
+            return new DateTimeImmutable($value);
+        } catch (\Exception $e) {
+            throw new InvalidFilterValueException(
+                sprintf(
+                    'Invalid datetime filter value "%s". Expected DateTimeInterface or valid datetime string.',
+                    $value
+                ),
+                previous: $e
+            );
+        }
     }
 
     protected function format(DateTimeInterface $dateTime): string

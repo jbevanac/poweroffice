@@ -12,6 +12,8 @@ use Http\Discovery\Psr18ClientDiscovery;
 use Poweroffice\Contracts\SDKInterface;
 use Poweroffice\Enum\Method;
 use Poweroffice\Enum\Status;
+use Poweroffice\Exceptions\CacheException;
+use Poweroffice\Exceptions\FailedToSendRequestException;
 use Poweroffice\Exceptions\InvalidClientException;
 use Poweroffice\Exceptions\InvalidGrantException;
 use Poweroffice\Exceptions\InvalidRequestException;
@@ -27,8 +29,10 @@ use Poweroffice\Resources\ContactBankAccountsResource;
 use Poweroffice\Resources\EmployeeResource;
 use Poweroffice\Resources\OnboardingResource;
 use Poweroffice\Serializer\PascalCaseToCamelCaseNameConverter;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Client\ClientInterface;
 use Psr\SimpleCache\CacheInterface;
+use Psr\SimpleCache\InvalidArgumentException;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
@@ -57,6 +61,9 @@ final class PowerofficeSDK implements SDKInterface
         $this->withPlugins($this->plugins);
     }
 
+    /**
+     * @throws PowerofficeException
+     */
     public function loadOrCreateAccessToken(): string
     {
         // Check in-memory token first
@@ -66,7 +73,12 @@ final class PowerofficeSDK implements SDKInterface
 
         // Check cache
         if ($this->cache && $this->cacheKey) {
-            $tokenData = $this->cache->get($this->cacheKey);
+            try {
+                $tokenData = $this->cache->get($this->cacheKey);
+            } catch (InvalidArgumentException $e) {
+                throw new CacheException('Invalid cache configuration or cache key', $e);
+            }
+
             if ($tokenData instanceof TokenResponse && $tokenData->expiresAt > time()) {
                 $this->accessToken = $tokenData->accessToken;
                 $this->accessTokenExpiresAt = $tokenData->expiresAt;
@@ -80,15 +92,22 @@ final class PowerofficeSDK implements SDKInterface
         $this->accessTokenExpiresAt = $tokenResponse->expiresAt;
 
         // Cache it
-        $this->cache?->set(
-            key: $this->cacheKey,
-            value: $tokenResponse,
-            ttl: $tokenResponse->expiresAt - time(),
-        );
+        try {
+            $this->cache?->set(
+                key: $this->cacheKey,
+                value: $tokenResponse,
+                ttl: $tokenResponse->expiresAt - time(),
+            );
+        } catch (InvalidArgumentException $e) {
+            throw new CacheException('Invalid cache configuration or cache key', $e);
+        }
 
         return $this->accessToken;
     }
 
+    /**
+     * @throws PowerofficeException
+     */
     private function authenticate(): TokenResponse
     {
         $uri = rtrim($this->baseUrl, '/').self::AUTH_ROUTE;
@@ -113,7 +132,11 @@ final class PowerofficeSDK implements SDKInterface
             ->withHeader('Accept', 'application/json')
             ->withBody($streamFactory->createStream($body));
 
-        $response = $this->safeClient()->sendRequest($request);
+        try {
+            $response = $this->safeClient()->sendRequest($request);
+        } catch (ClientExceptionInterface $e) {
+            throw new FailedToSendRequestException('Failed to authenticate with PowerOffice API', $e);
+        }
 
         $body = (string) $response->getBody();
         $data = json_decode($body, true);

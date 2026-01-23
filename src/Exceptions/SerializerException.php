@@ -2,7 +2,7 @@
 
 namespace Poweroffice\Exceptions;
 
-class SerializerException extends ApiException
+class SerializerException extends PowerofficeException
 {
 
 }

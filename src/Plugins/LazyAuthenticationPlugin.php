@@ -5,6 +5,7 @@ namespace Poweroffice\Plugins;
 
 use Http\Client\Common\Plugin;
 use Http\Promise\Promise;
+use Poweroffice\Exceptions\PowerofficeException;
 use Poweroffice\PowerofficeSDK;
 use Psr\Http\Message\RequestInterface;
 
@@ -15,6 +16,9 @@ final readonly class LazyAuthenticationPlugin implements Plugin
     ) {
     }
 
+    /**
+     * @throws PowerofficeException
+     */
     public function handleRequest(RequestInterface $request, callable $next, callable $first): Promise
     {
         $token = $this->sdk->loadOrCreateAccessToken();

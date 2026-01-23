@@ -6,8 +6,10 @@ use Poweroffice\Contracts\ModelInterface;
 use Poweroffice\Contracts\ResourceInterface;
 use Poweroffice\Enum\Method;
 use Poweroffice\Enum\Status;
-use Poweroffice\Exceptions\ApiException;
+use Poweroffice\Exceptions\FailedToDecodeJsonResponseException;
 use Poweroffice\Exceptions\FailedToSendRequestException;
+use Poweroffice\Exceptions\PowerofficeException;
+use Poweroffice\Exceptions\UriTooLongException;
 use Poweroffice\Model\ProblemDetail;
 use Poweroffice\Query\Options\QueryOptions;
 use Ramsey\Collection\Collection;
@@ -18,8 +20,10 @@ use Ramsey\Collection\Collection;
 trait CanListResource
 {
     /**
+     * @throws FailedToDecodeJsonResponseException
+     * @throws UriTooLongException
+     * @throws PowerofficeException
      * @throws FailedToSendRequestException
-     * @throws ApiException
      */
     public function listResource(string $modelClass, array|string $path, array $filters = [], ?QueryOptions $queryOptions = null): ModelInterface|Collection
     {

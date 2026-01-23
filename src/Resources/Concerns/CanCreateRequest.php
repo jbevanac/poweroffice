@@ -37,6 +37,9 @@ trait CanCreateRequest
         return 'https://' . $baseUrl . '/' . $url;
     }
 
+    /**
+     * @throws UriTooLongException
+     */
     public function request(Method $method, array|string $url, array $query = [], ?string $body = null, array $headers = []): RequestInterface
     {
         if (is_array($url)) {

@@ -6,7 +6,10 @@ use Poweroffice\Contracts\ModelInterface;
 use Poweroffice\Contracts\ResourceInterface;
 use Poweroffice\Enum\Method;
 use Poweroffice\Enum\Status;
-use Poweroffice\Exceptions\ApiException;
+use Poweroffice\Exceptions\FailedToDecodeJsonResponseException;
+use Poweroffice\Exceptions\FailedToSendRequestException;
+use Poweroffice\Exceptions\PowerofficeException;
+use Poweroffice\Exceptions\UriTooLongException;
 use Poweroffice\Model\ProblemDetail;
 
 /**
@@ -15,8 +18,10 @@ use Poweroffice\Model\ProblemDetail;
 trait CanFindResource
 {
     /**
-     *
-     * @throws ApiException
+     * @throws FailedToDecodeJsonResponseException
+     * @throws UriTooLongException
+     * @throws PowerofficeException
+     * @throws FailedToSendRequestException
      */
     public function findResource(string $modelClass, array|string $path, bool $raw = false): ModelInterface|ProblemDetail|array
     {

@@ -2,7 +2,7 @@
 
 namespace Poweroffice\Exceptions;
 
-class FailedToSendRequestException extends ApiException
+class FailedToSendRequestException extends PowerofficeException
 {
 
 }

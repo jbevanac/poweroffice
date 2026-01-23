@@ -2,6 +2,7 @@
 
 namespace Poweroffice\Resources;
 
+use Poweroffice\Exceptions\PowerofficeException;
 use Poweroffice\Model\Employee;
 use Poweroffice\Model\EmployeeBankAccounts;
 use Poweroffice\Model\MailAddress;
@@ -16,7 +17,6 @@ use Poweroffice\Resources\Concerns\CanListResource;
 use Poweroffice\Resources\Concerns\CanPatchResource;
 use Ramsey\Collection\Collection;
 use Poweroffice\Contracts\ResourceInterface;
-use Poweroffice\Exceptions\ApiException;
 use Poweroffice\Resources\Concerns\CanAccessSDK;
 
 final class EmployeeResource implements ResourceInterface
@@ -63,7 +63,7 @@ final class EmployeeResource implements ResourceInterface
      *     travelExpenseBankAccountId?: int,
      * } $data
      *
-     * @throws ApiException
+     * @throws PowerofficeException
      */
     public function create(array $data): Employee|ProblemDetail
     {
@@ -76,7 +76,7 @@ final class EmployeeResource implements ResourceInterface
     }
 
     /**
-     * @throws ApiException
+     * @throws PowerofficeException
      */
     public function patch(PatchBuilder $patchBuilder, string|int $id): Employee|ProblemDetail
     {
@@ -88,7 +88,7 @@ final class EmployeeResource implements ResourceInterface
     }
 
     /**
-     * @throws ApiException
+     * @throws PowerofficeException
      */
     public function patchBankAccounts(PatchBuilder $patchBuilder, string|int $id): EmployeeBankAccounts|ProblemDetail
     {
@@ -100,7 +100,7 @@ final class EmployeeResource implements ResourceInterface
     }
 
     /**
-     * @throws ApiException
+     * @throws PowerofficeException
      */
     public function find(int $id): Employee|ProblemDetail
     {
@@ -111,7 +111,7 @@ final class EmployeeResource implements ResourceInterface
     }
 
     /**
-     * @throws ApiException
+     * @throws PowerofficeException
      */
     public function list(array $filters = [], ?QueryOptions $queryOptions = null): Collection|ProblemDetail
     {

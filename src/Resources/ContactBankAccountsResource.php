@@ -2,6 +2,7 @@
 
 namespace Poweroffice\Resources;
 
+use Poweroffice\Exceptions\PowerofficeException;
 use Poweroffice\Model\ContactBankAccount;
 use Poweroffice\Model\ProblemDetail;
 use Poweroffice\Query\Options\QueryOptions;
@@ -14,7 +15,6 @@ use Poweroffice\Resources\Concerns\CanListResource;
 use Poweroffice\Resources\Concerns\CanPatchResource;
 use Ramsey\Collection\Collection;
 use Poweroffice\Contracts\ResourceInterface;
-use Poweroffice\Exceptions\ApiException;
 use Poweroffice\Resources\Concerns\CanAccessSDK;
 
 final class ContactBankAccountsResource implements ResourceInterface
@@ -42,7 +42,7 @@ final class ContactBankAccountsResource implements ResourceInterface
      *     lastChangedDateTimeOffset?: string,
      * } $data
      *
-     * @throws ApiException
+     * @throws PowerofficeException
      */
     public function create(array $data, string|int $contactId): ContactBankAccount|ProblemDetail
     {
@@ -55,7 +55,7 @@ final class ContactBankAccountsResource implements ResourceInterface
     }
 
     /**
-     * @throws ApiException
+     * @throws PowerofficeException
      */
     public function patch(PatchBuilder $patchBuilder, string|int $contactId, string|int $contactBankAccountId): ContactBankAccount|ProblemDetail
     {
@@ -68,7 +68,7 @@ final class ContactBankAccountsResource implements ResourceInterface
     }
 
     /**
-     * @throws ApiException
+     * @throws PowerofficeException
      */
     public function find(string|int $contactId, string|int $contactBankAccountId): ContactBankAccount|ProblemDetail
     {
@@ -79,7 +79,7 @@ final class ContactBankAccountsResource implements ResourceInterface
     }
 
     /**
-     * @throws ApiException
+     * @throws PowerofficeException
      */
     public function list(array $filters = [], ?QueryOptions $queryOptions = null): Collection|ProblemDetail
     {

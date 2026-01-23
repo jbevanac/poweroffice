@@ -5,13 +5,12 @@ namespace Poweroffice\Model;
 use Poweroffice\Contracts\ModelInterface;
 use Poweroffice\PowerofficeSDK;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
-use Poweroffice\Exceptions\ApiException;
 use Poweroffice\Exceptions\SerializerException;
 
 trait ModelTrait
 {
     /**
-     * @throws ApiException
+     * @throws SerializerException
      */
     public function toJson(): string
     {
@@ -29,7 +28,8 @@ trait ModelTrait
     /**
      * @param array $data
      * @return ModelInterface
-     * @throws ApiException
+     *
+     * @throws SerializerException
      */
     public static function make(array $data): ModelInterface
     {

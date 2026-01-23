@@ -2,7 +2,7 @@
 
 namespace Poweroffice\Exceptions;
 
-class PowerofficeException extends \RuntimeException
+class PowerofficeException extends \Exception
 {
 
 }

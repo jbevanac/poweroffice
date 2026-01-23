@@ -2,7 +2,7 @@
 
 namespace Poweroffice\Exceptions;
 
-class FailedToDecodeJsonResponseException extends ApiException
+class FailedToDecodeJsonResponseException extends PowerofficeException
 {
 
 }
