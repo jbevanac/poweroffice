@@ -4,7 +4,6 @@ namespace Poweroffice;
 
 use Http\Client\Common\Plugin;
 use Http\Client\Common\Plugin\HeaderAppendPlugin;
-use Http\Client\Common\Plugin\RetryPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
