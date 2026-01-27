@@ -6,6 +6,8 @@ use Http\Discovery\Psr17FactoryDiscovery;
 use Poweroffice\Contracts\FilterInterface;
 use Poweroffice\Exceptions\FailedToDecodeJsonResponseException;
 use Poweroffice\Exceptions\FailedToSendRequestException;
+use Poweroffice\Exceptions\PowerofficeException;
+use Poweroffice\Exceptions\RateLimitException;
 use Poweroffice\Exceptions\UriTooLongException;
 use Poweroffice\Plugins\LazyAuthenticationPlugin;
 use Poweroffice\Query\Options\QueryOptions;
@@ -25,6 +27,7 @@ trait CanCreateRequest
      * and returns a misleading 404.
      */
     private const int MAX_URI_LENGTH = 2000;
+    private const int MAX_RETRIES = 5;
 
     public function prepareUrl(string $url): string
     {
@@ -128,22 +131,38 @@ trait CanCreateRequest
         $plugins = $authenticate ? [new LazyAuthenticationPlugin($this->getSdk())] : [];
         $sdk = $this->getSdk()->withPlugins($plugins);
 
-        try {
-            $response = $sdk->client()->sendRequest(
-                request: $request,
-            );
-        } catch (ClientExceptionInterface $e) {
-            throw new FailedToSendRequestException(
-                message: 'Failed to send request.',
-                previous: $e,
-            );
+        for ($attempt = 1; $attempt <= self::MAX_RETRIES; $attempt++) {
+            try {
+                $response = $sdk->client()->sendRequest(request: $request);
+                $this->handleCommonErrors($response);
+                return $response;
+            } catch (RateLimitException $e) {
+                if ($attempt === self::MAX_RETRIES) {
+                    throw new FailedToSendRequestException(
+                        'Failed to send request after ' . self::MAX_RETRIES . ' retries.',
+                        $e
+                    );
+                }
+
+                $retryAfter = max(1, $e->getRetryAfter());
+                $wait = $retryAfter + 0.5 * ($attempt - 1);
+                usleep((int)($wait * 1_000_000));
+            } catch (ClientExceptionInterface $e) {
+                throw new FailedToSendRequestException(
+                    message: 'Failed to send request.',
+                    previous: $e
+                );
+            }
         }
 
-        $this->handleCommonErrors($response);
-
-        return $response;
+        throw new FailedToSendRequestException(
+            sprintf('Failed to send request after %d attempts due to unexpected error.', self::MAX_RETRIES)
+        );
     }
 
+    /**
+     * @throws RateLimitException
+     */
     private function handleCommonErrors(ResponseInterface $response): void
     {
         $status = $response->getStatusCode();
@@ -151,6 +170,12 @@ trait CanCreateRequest
         // Early exit for OK
         if ($status >= 200 && $status < 300) {
             return;
+        }
+
+        if ($response->getStatusCode() === 429) {
+            $retryAfter = (int) $response->getHeaderLine('Retry-After') ?: 1;
+
+            throw new RateLimitException('Too many requests', $retryAfter);
         }
 
         // // Attempt to decode the response JSON (catch invalid JSON too)
@@ -187,10 +212,6 @@ trait CanCreateRequest
         //     throw new ForbiddenException('Forbidden. You do not have access to this resource.');
         // }
         //
-        // // 429 Too Many Requests
-        // if ($status === 429) {
-        //     throw new RateLimitExceededException('Rate limit exceeded. Try again later.');
-        // }
         //
         // // 500+ server errors
         // if ($status >= 500) {

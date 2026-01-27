@@ -76,6 +76,11 @@ function listEmployees(PowerofficeSDK $sdk): ProblemDetail|Collection
     return $sdk->employees()->list($filters, $queryOptions);
 }
 
+function findEmployee(PowerofficeSDK $sdk): \Poweroffice\Contracts\ModelInterface
+{
+    return $sdk->employees()->find(123456);
+}
+
 function listBankAccounts(PowerOfficeSDK $sdk): ProblemDetail|Collection
 {
     return $sdk->contactBankAccounts()->list();

@@ -195,7 +195,6 @@ final class PowerofficeSDK implements SDKInterface, Resources
     public function defaultPlugins(): array
     {
         return [
-            new RetryPlugin(),
             new HeaderAppendPlugin([
                 'Ocp-Apim-Subscription-Key' => $this->subscriptionKey,
                 'Content-Type' => 'application/json',
