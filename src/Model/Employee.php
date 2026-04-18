@@ -33,6 +33,12 @@ final class Employee implements ModelInterface
         public ?int $managerEmployeeNo = null,
         public ?string $nationalIdNumber = null,
         public ?int $number = null,
+        /**
+         * Raw phone number from API (UNTRUSTED).
+         *
+         * May contain invalid characters, formatting, or garbage data.
+         * Always sanitize/validate before use.
+         */
         public ?string $phoneNumber = null,
         public ?int $salaryBankAccountId = null,
         public ?string $startDate = null,
