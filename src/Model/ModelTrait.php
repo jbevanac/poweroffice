@@ -16,9 +16,9 @@ trait ModelTrait
     {
         try {
             return PowerofficeSDK::getSerializer()->serialize(
-                $this,
-                'json',
-                [AbstractObjectNormalizer::SKIP_NULL_VALUES => true]
+                data: $this,
+                format: 'json',
+                context: [AbstractObjectNormalizer::SKIP_NULL_VALUES => true],
             );
         } catch (\Throwable $e) {
             throw new SerializerException('Serialization failed: ' . $e->getMessage(), 0, $e);
